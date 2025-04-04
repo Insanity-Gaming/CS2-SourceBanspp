@@ -14,8 +14,8 @@ public partial class SourceBansppBridge
         var basePath = Path.Combine(ModuleDirectory, "../../configs/plugins/SourceBansppBridge");
         if(!Directory.Exists(basePath)) return;
 
-        if(File.Exists($"{basePath}/sb_admins.json"))
-            AdminManager.LoadAdminData($"{basePath}/sb_admins.json");
+        // if(File.Exists($"{basePath}/sb_admins.json"))
+        //     AdminManager.LoadAdminData($"{basePath}/sb_admins.json");
            
         if(File.Exists($"{basePath}/sb_groups.json")) 
             AdminManager.LoadAdminGroups($"{basePath}/sb_groups.json");
@@ -156,7 +156,6 @@ public partial class SourceBansppBridge
         var json = JsonSerializer.Serialize(groups);
         File.WriteAllText(path, json);
 
-
         AdminManager.LoadAdminGroups(path);
 
         _groupsLoaded = true;
@@ -164,19 +163,19 @@ public partial class SourceBansppBridge
 
     private int _setupAdminRetryCount = 0;
     
-    private const int _setupAdminRetryCountMax = 10;
+    private const int SetupAdminRetryCountMax = 10;
     private async Task ProcessAdmins(IEnumerable<Admin> data)
     {
         if (!_overridesLoaded || !_groupsLoaded)
         {
-            if (_setupAdminRetryCount == _setupAdminRetryCountMax) return;
+            if (_setupAdminRetryCount == SetupAdminRetryCountMax) return;
             AddTimer(1f, () => Task.Run(async () => await ProcessAdmins(data)));
             _setupAdminRetryCount++;
             return;
         }
 
         _setupAdminRetryCount = 0;
-        var _adminDict = new Dictionary<string, AdminData>();
+        var adminDict = new Dictionary<string, AdminData>();
         foreach (var admin in data.Where((adm) => adm.authid is not null &&
                                                   (adm.srv_group is not null && adm.srv_group.Length > 0)))
         {
@@ -197,17 +196,19 @@ public partial class SourceBansppBridge
                 immunity = (uint) admin.immunity;
             if(AdminManager.GetPlayerAdminData(steamid)?.Immunity < admin.immunity)
                 AdminManager.SetPlayerImmunity(steamid, immunity);
-
-            _adminDict.Add(admin.user!, AdminManager.GetPlayerAdminData(steamid)!);
+            
+            adminDict.Add(admin.user!, AdminManager.GetPlayerAdminData(steamid)!);
             await Task.Delay(1);
         }
+        
+        // AdminManager.MergeGroupPermsIntoAdmins();
         
         var path = Path.Combine(ModuleDirectory, "../../configs/plugins/SourceBansppBridge");
         if(!Directory.Exists(path))
             Directory.CreateDirectory(path);
         path += "/sb_admins.json";
         
-        var json = JsonSerializer.Serialize(_adminDict);
+        var json = JsonSerializer.Serialize(adminDict);
         File.WriteAllText(path, json);
     }
 }
