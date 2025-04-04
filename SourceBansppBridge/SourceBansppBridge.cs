@@ -47,8 +47,8 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         {'j', "@css/chat"}, {'k', "@css/vote"}, {'l', "@css/password"},
         {'m', "@css/rcon"}, {'n', "@css/cheats"}, {'z', "@css/root"},
         // Custom/VIP Flags
-        {'o', "@css/vip"}, {'p', "@css/vip"}, {'q', "@css/vip"},
-        {'r', "@css/vip"}, {'s', "@css/vip"}, {'t', "@css/vip"}
+        {'o', "@css/vip"}, {'p', "@css/vip2"}, {'q', "@css/vip3"},
+        {'r', "@css/vip4"}, {'s', "@css/vip5"}, {'t', "@css/vip6"}
     };
     
 
