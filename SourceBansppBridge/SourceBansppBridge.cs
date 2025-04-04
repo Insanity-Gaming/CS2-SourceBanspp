@@ -150,14 +150,22 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         }
         else
         {
-            adminIp = admin.IpAddress ?? "";
+            adminIp = GetIpAddress(admin);
             adminAuth = new SteamID(admin.SteamID).SteamId2;
         }
         
-        var ip = target.IpAddress ?? "";
+        var ip = GetIpAddress(target);
         var auth = new SteamID(target.SteamID).SteamId2;
         var name = target.PlayerName;
         InsertBan(time, name, auth, ip, reason, adminAuth, adminIp, admin, target);
+    }
+    
+    public static string GetIpAddress(CCSPlayerController? controller)
+    {
+        var ip = controller?.IpAddress ?? "";
+        if (ip.Length > 0)
+            ip = ip.Split(':')[0];
+        return ip;
     }
     
     private void InsertBan(uint time, string name, string auth, string ip, string reason, string adminAuth, string adminIp, CCSPlayerController? admin, CCSPlayerController target)
