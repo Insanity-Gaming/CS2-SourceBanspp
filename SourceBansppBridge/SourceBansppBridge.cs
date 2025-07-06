@@ -80,11 +80,11 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         if (ip.Length > 0)
             ip = ip.Substring(0, ip.IndexOf(':'));
         var steamid2 = steamid.SteamId2.Substring(8);
-        
+        Logger.LogInformation($"Checkign to see if {controller.PlayerName} is banned with IP {ip} or steamid {steamid2}");
         Task.Run(async () =>
         {
             await _connection.Query<BanData>(
-                $"SELECT bid, ip FROM {Config.DatabasePrefix}_bans WHERE ((type = 0 AND authid REGEXP '^STEAM_[0-9]:{steamid2}$') OR (type = 1 AND ip = @Address)) AND (length = '0' OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL",
+                $"SELECT bid, ip FROM {Config.DatabasePrefix}_bans WHERE ((type = 0 AND (authid REGEXP '^STEAM_[0-9]:{steamid2}$' OR ip = @Address)) OR (type = 1 AND ip = @Address)) AND (length = '0' OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL",
                 (data) => { Server.NextFrame(() => CheckBan(playerslot, data));}, new {Address = ip});
         });
     }
@@ -94,6 +94,10 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         var ban = data.FirstOrDefault();
         if (ban is null)
         {
+            var tmp = Utilities.GetPlayerFromSlot(playerSlot);
+
+            Logger.LogInformation($"{tmp?.PlayerName ?? playerSlot.ToString()} has a registered ban");
+
             PlayerStatus[playerSlot] = true;
             return;
         }
@@ -101,11 +105,13 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         var controller = Utilities.GetPlayerFromSlot(playerSlot);
         if (controller is null) return;
 
+        Logger.LogInformation($"{controller.PlayerName} has a registered ban")
+;
         var name = controller.PlayerName;
         var steamid = new SteamID(controller.SteamID).SteamId2.Substring(8);
         var ip = controller.IpAddress ?? "";
         
-        if (controller.IpAddress is not null)
+        if (controller.IpAddress is not null && !ip.Equals(ban.ip))
         {
             Task.Run(async () =>
             {
