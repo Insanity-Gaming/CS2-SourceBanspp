@@ -66,6 +66,8 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
        });
     }
 
+    private string GetControllerIpAddress(CCSPlayerController controller) => controller.IpAddress?.Split(':')[0] ?? "error";
+
     private void OnClientAuthorized(int playerslot, SteamID steamid)
     {
         if (steamid.SteamId2[0] == 'B' || steamid.SteamId2[9] == 'L')
@@ -76,16 +78,14 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
 
         var controller = Utilities.GetPlayerFromSlot(playerslot);
         if (controller is null) return;
-        var ip = controller.IpAddress ?? "";
-        if (ip.Length > 0)
-            ip = ip.Substring(0, ip.IndexOf(':'));
+        var ip = GetControllerIpAddress(controller);
         var steamid2 = steamid.SteamId2.Substring(8);
         Logger.LogInformation($"Checkign to see if {controller.PlayerName} is banned with IP {ip} or steamid {steamid2}");
         Task.Run(async () =>
         {
             await _connection.Query<BanData>(
                 $"SELECT bid, ip FROM {Config.DatabasePrefix}_bans WHERE ((type = 0 AND (authid REGEXP '^STEAM_[0-9]:{steamid2}$' OR ip = @Address)) OR (type = 1 AND ip = @Address)) AND (length = '0' OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL",
-                (data) => { Server.NextFrame(() => CheckBan(playerslot, data));}, new {Address = ip});
+                (data) => { Server.NextFrame(() => CheckBan(playerslot, data)); }, new { Address = ip });
         });
     }
 
@@ -96,7 +96,7 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         {
             var tmp = Utilities.GetPlayerFromSlot(playerSlot);
 
-            Logger.LogInformation($"{tmp?.PlayerName ?? playerSlot.ToString()} has a registered ban");
+            Logger.LogInformation($"{tmp?.PlayerName ?? playerSlot.ToString()} has no active bans");
 
             PlayerStatus[playerSlot] = true;
             return;
@@ -109,9 +109,9 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
 ;
         var name = controller.PlayerName;
         var steamid = new SteamID(controller.SteamID).SteamId2.Substring(8);
-        var ip = controller.IpAddress ?? "";
+        var ip = GetControllerIpAddress(controller);
         
-        if (controller.IpAddress is not null && !ip.Equals(ban.ip))
+        if (!string.IsNullOrEmpty(ip) && !ip.Equals(ban.ip))
         {
             Task.Run(async () =>
             {
@@ -156,23 +156,23 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         }
         else
         {
-            adminIp = GetIpAddress(admin);
+            adminIp = GetControllerIpAddress(admin);
             adminAuth = new SteamID(admin.SteamID).SteamId2;
         }
         
-        var ip = GetIpAddress(target);
+        var ip = GetControllerIpAddress(target);
         var auth = new SteamID(target.SteamID).SteamId2;
         var name = target.PlayerName;
         InsertBan(time, name, auth, ip, reason, adminAuth, adminIp, admin, target);
     }
     
-    public static string GetIpAddress(CCSPlayerController? controller)
-    {
-        var ip = controller?.IpAddress ?? "";
-        if (ip.Length > 0)
-            ip = ip.Split(':')[0];
-        return ip;
-    }
+    // private string GetControllerIpAddress(CCSPlayerController? controller)
+    // {
+    //     var ip = controller?.IpAddress ?? "";
+    //     if (ip.Length > 0)
+    //         ip = ip.Split(':')[0];
+    //     return ip;
+    // }
     
     private void InsertBan(uint time, string name, string auth, string ip, string reason, string adminAuth, string adminIp, CCSPlayerController? admin, CCSPlayerController target)
     {
