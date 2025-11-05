@@ -179,7 +179,7 @@ public partial class SourceBansppBridge
         foreach (var admin in data.Where((adm) => adm.authid is not null &&
                                                   (adm.srv_group is not null && adm.srv_group.Length > 0)))
         {
-            Logger.LogInformation(JsonSerializer.Serialize(admin));
+            // Logger.LogInformation(JsonSerializer.Serialize(admin));
             var steamid = new SteamID(admin.authid!);
             AdminManager.AddPlayerToGroup(steamid, _adminGroups![admin.srv_group!]);
             var flags = new HashSet<string>();

@@ -80,7 +80,7 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         if (controller is null) return;
         var ip = GetControllerIpAddress(controller);
         var steamid2 = steamid.SteamId2.Substring(8);
-        Logger.LogInformation($"Checkign to see if {controller.PlayerName} is banned with IP {ip} or steamid {steamid2}");
+        // Logger.LogInformation($"Checkign to see if {controller.PlayerName} is banned with IP {ip} or steamid {steamid2}");
         Task.Run(async () =>
         {
             await _connection.Query<BanData>(
@@ -96,7 +96,7 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         {
             var tmp = Utilities.GetPlayerFromSlot(playerSlot);
 
-            Logger.LogInformation($"{tmp?.PlayerName ?? playerSlot.ToString()} has no active bans");
+            // Logger.LogInformation($"{tmp?.PlayerName ?? playerSlot.ToString()} has no active bans");
 
             PlayerStatus[playerSlot] = true;
             return;
@@ -105,7 +105,7 @@ public partial class SourceBansppBridge : BasePlugin, IPluginConfig<SourceBansCo
         var controller = Utilities.GetPlayerFromSlot(playerSlot);
         if (controller is null) return;
 
-        Logger.LogInformation($"{controller.PlayerName} has a registered ban")
+        // Logger.LogInformation($"{controller.PlayerName} has a registered ban")
 ;
         var name = controller.PlayerName;
         var steamid = new SteamID(controller.SteamID).SteamId2.Substring(8);
