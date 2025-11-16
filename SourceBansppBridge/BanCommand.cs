@@ -43,7 +43,9 @@ public partial class SourceBansppBridge
                 command.ReplyToCommand($"{ChatColors.LightRed}[IG]{ChatColors.Default} Invalid time format.");
                 return;
             }
-            reason = command.GetArg(3);
+            reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : "No reason provided.";
             if (string.IsNullOrEmpty(reason))
             {
                 reason = "No reason provided.";
